@@ -1,3 +1,5 @@
+const HF_API_URL = "https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large";
+
 // Global variables
 let folderFiles = [];
 let photoFile = null;
@@ -9,7 +11,6 @@ let currentZoom = 100; // zoom level
 let pinnedImages = []; // for triple-click pinning functionality
 
 // Using Hugging Face free inference API - no registration required
-const HF_API_URL = 'https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium';
 
 // DOM elements
 const folderInput = document.getElementById('folderInput');
@@ -53,6 +54,9 @@ function setupEventListeners() {
  // Zoom controls
  zoomOut.addEventListener('click', zoomOutFeed);
  zoomIn.addEventListener('click', zoomInFeed);
+
+ const downloadFeedBtn = document.getElementById('downloadFeedBtn');
+downloadFeedBtn.addEventListener('click', downloadFeedAsZip);
  
  // Drag and drop for upload cards
  setupDragAndDrop();
@@ -571,74 +575,72 @@ function sortDisplayImages(theMainImage) {
 }
 
 
-function generateInstagramCaptions() {
- const theme = themeInput.value.trim();
- 
- if (!theme) {
- showNotification('Please enter a theme for your captions', 'error');
- return;
- }
- 
- if (Object.keys(imageStore).length === 0) {
- showNotification('Please upload a folder of images first.', 'error');
- return;
- }
- 
- // Clear previous captions to prevent duplication
- captionsOutput.innerHTML = '';
- 
- // Show loading state
- generateCaptions.innerHTML = '<div class="loading"></div> Generating...';
- generateCaptions.disabled = true;
- 
- setTimeout(() => {
- try {
- // Process images and generate captions
- let processedImages = Object.entries(imageStore);
- 
- // If we have a reference image, filter by color similarity
- if (mainImage) {
- processedImages = sortDisplayImages(mainImage);
- if (processedImages.length === 0) {
- showNotification('No images match your reference photo colors. Using all images instead.', 'info');
- processedImages = Object.entries(imageStore);
- }
- }
- 
- const captions = createCaptionsForImages(theme, processedImages);
- displayCaptions(captions);
- 
- // Show feed controls and zoom sidebar after generating feed
- feedControls.style.display = 'flex';
- zoomSidebar.style.display = 'block';
- 
- generateCaptions.innerHTML = '<i class="fas fa-magic"></i> Generate Instagram Feed';
- generateCaptions.disabled = false;
- showNotification('Instagram feed generated successfully!', 'success');
- } catch (error) {
- console.error('Error generating captions:', error);
- generateCaptions.innerHTML = '<i class="fas fa-magic"></i> Generate Instagram Feed';
- generateCaptions.disabled = false;
- showNotification('Error generating feed. Please try again.', 'error');
- }
- }, 2000);
-}
+async function generateInstagramCaptions() {
+    const theme = themeInput.value.trim();
+  
+    if (!theme) {
+      showNotification('Please enter a theme for your captions', 'error');
+      return;
+    }
+  
+    if (Object.keys(imageStore).length === 0) {
+      showNotification('Please upload a folder of images first.', 'error');
+      return;
+    }
+  
+    captionsOutput.innerHTML = '';
+    generateCaptions.innerHTML = '<div class="loading"></div> Generating...';
+    generateCaptions.disabled = true;
+  
+    try {
+      let processedImages = Object.entries(imageStore);
+  
+      if (mainImage) {
+        processedImages = sortDisplayImages(mainImage);
+        if (processedImages.length === 0) {
+          showNotification('No matches. Using all images instead.', 'info');
+          processedImages = Object.entries(imageStore);
+        }
+      }
+  
+      // 🔹 Await Gemini captions here
+      const captions = await createCaptionsForImages(theme, processedImages);
+      displayCaptions(captions);
+  
+      feedControls.style.display = 'flex';
+      zoomSidebar.style.display = 'block';
+      showNotification('Instagram feed generated successfully!', 'success');
+    } catch (error) {
+      console.error('Error generating captions:', error);
+      showNotification('Error generating feed. Please try again.', 'error');
+    } finally {
+      generateCaptions.innerHTML = '<i class="fas fa-magic"></i> Generate Instagram Feed';
+      generateCaptions.disabled = false;
+    }
+  }
+  
 
-function createCaptionsForImages(theme, imageEntries) {
- const captions = [];
- 
- for (const [id, data] of imageEntries) {
- const caption = generateCaptionForImage(data.name, data.colors, theme, captions.length + 1);
- captions.push({
- imageName: data.name,
- imageSrc: data.src,
- caption: caption,
- colors: data.colors
- });
- }
- 
- return captions;
-}
+async function createCaptionsForImages(theme, imageEntries) {
+    const captions = [];
+  
+    for (const [id, data] of imageEntries) {
+      // Strip base64 (remove "data:image/png;base64,")
+      const base64Image = data.src.split(",")[1];
+  
+      // Call Gemini API instead of local caption
+      const caption = await generateCaption(base64Image);
+  
+      captions.push({
+        imageName: data.name,
+        imageSrc: data.src,
+        caption: caption || "✨ Could not generate caption, please try again ✨",
+        colors: data.colors
+      });
+    }
+  
+    return captions;
+  }
+  
 
 function generateCaptionForImage(imageName, colors, theme, imageNumber) {
  const colorNames = colors.map(hex => getColorName(hex));
@@ -1099,3 +1101,66 @@ function suggestCaptionChanges(button) {
 }
 
 // Gradient functions removed - replaced with pinning functionality
+
+
+// ✅ NEW: Browser-safe caption generator using Hugging Face
+
+
+async function generateCaption(base64Image) {
+    try {
+      const imageInput = "data:image/jpeg;base64," + base64Image;
+      const response = await fetch(
+        "https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-large",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            inputs: { image: imageInput }
+          }),
+        }
+      );
+  
+      const result = await response.json();
+      console.log("HF caption result:", result);
+  
+      if (Array.isArray(result) && result[0]?.generated_text) {
+        return result[0].generated_text;
+      }
+      return "✨ Could not generate caption, please try again ✨";
+    } catch (err) {
+      console.error("Error calling HF API:", err);
+      return "⚠️ Caption generation failed";
+    }
+  }
+
+  async function downloadFeedAsZip() {
+    if (!document.querySelector('.instagram-feed')) {
+      showNotification('No feed to save!', 'error');
+      return;
+    }
+  
+    const zip = new JSZip();
+    const folder = zip.folder("Feedle_Export");
+    const cards = document.querySelectorAll('.flip-card-front');
+  
+    for (let i = 0; i < cards.length; i++) {
+      const img = cards[i].querySelector('.feed-image');
+      const caption = cards[i].querySelector('.caption-text')?.textContent || "";
+      const filename = `${String(i + 1).padStart(2, '0')}_${img.alt || 'image'}.jpg`;
+  
+      // Add image
+      const imgData = img.src.split(",")[1]; // remove data prefix
+      folder.file(filename, imgData, { base64: true });
+  
+      // Add caption text
+      folder.file(filename.replace('.jpg', '.txt'), caption);
+    }
+  
+    const content = await zip.generateAsync({ type: "blob" });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(content);
+    a.download = "Feedle_Feed.zip";
+    a.click();
+  
+    showNotification('Feed downloaded as ZIP!', 'success');
+  }
