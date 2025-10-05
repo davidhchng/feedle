@@ -121,8 +121,9 @@ function handleFolderUpload(e) {
 
  img.onload = function() {
  const colorThief = new ColorThief();
- const palette = colorThief.getPalette(img, 8);
- const colors = palette.map(rgb => rgbToHex(rgb[0], rgb[1], rgb[2]));
+ const palette = colorThief.getPalette(img, 8);  
+ let colors = palette.map(rgb => rgbToHex(rgb[0], rgb[1], rgb[2]));
+ colors.sort((a, b) => poppiness(b) - poppiness(a)); // ✅ new line
  // store in object
  imageStore[imageId] = {
  name: file.name,
@@ -157,7 +158,9 @@ function handlePhotoUpload(e) {
  img.onload = function() {
  const colorThief = new ColorThief();
  const palette = colorThief.getPalette(img, 8);
- const colors = palette.map(rgb => rgbToHex(rgb[0], rgb[1], rgb[2]));
+ let colors = palette.map(rgb => rgbToHex(rgb[0], rgb[1], rgb[2]));
+ colors.sort((a, b) => poppiness(b) - poppiness(a)); // ✅ new line
+
 
  mainImage = {
  name: file.name,
