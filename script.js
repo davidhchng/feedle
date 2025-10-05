@@ -643,20 +643,29 @@ async function generateInstagramCaptions() {
   }
   
 
-async function createCaptionsForImages(theme, imageEntries) {
+  async function createCaptionsForImages(theme, imageEntries) {
     const captions = [];
   
     for (const [id, data] of imageEntries) {
-      // Strip base64 (remove "data:image/png;base64,")
       const base64Image = data.src.split(",")[1];
+      let caption = null;
   
-      // Call Gemini API instead of local caption
-      const caption = await generateCaption(base64Image);
+      try {
+        // Try Hugging Face first
+        caption = await generateCaption(base64Image);
+      } catch (err) {
+        console.error("HF caption error, falling back:", err);
+      }
+  
+      // If HF failed OR returned the default failure text → fallback
+      if (!caption || caption.includes("Could not generate") || caption.includes("failed")) {
+        caption = generateCaptionForImage(data.name, data.colors, theme, captions.length + 1);
+      }
   
       captions.push({
         imageName: data.name,
         imageSrc: data.src,
-        caption: caption || "✨ Could not generate caption, please try again ✨",
+        caption,
         colors: data.colors
       });
     }
