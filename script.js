@@ -60,6 +60,15 @@ downloadFeedBtn.addEventListener('click', downloadFeedAsZip);
  
  // Drag and drop for upload cards
  setupDragAndDrop();
+
+ // Start with clear button disabled
+ clearBtn.disabled = true
+
+ // Start with generate button disabled
+ generateCaptions.disabled = true
+ 
+ // Start with download feed button disabled
+ downloadFeedBtn.disabled = true
 }
 
 function setupDragAndDrop() {
@@ -136,6 +145,7 @@ function handleFolderUpload(e) {
  };
 
  console.log("Stored:", imageStore);
+ updateProcessButton();
  };
  };
 
@@ -173,6 +183,7 @@ function handlePhotoUpload(e) {
  };
  sortDisplayImages(mainImage); // NEWLY ADDED 
  console.log("Stored:", imageStore);
+ updateProcessButton();
  };
  };
 
@@ -263,7 +274,19 @@ function displayPhotoPreview() {
 }
 
 function updateProcessButton() {
- // This function is no longer needed since we removed the process button
+    const hasFiles = folderFiles.length > 0 || photoFile !== null;
+
+    // Update Generate button
+    generateCaptions.disabled = !hasFiles;
+    generateCaptions.innerHTML = '<i class="fas fa-magic"></i> Generate Instagram Feed';
+
+    // Update Clear button
+    clearBtn.disabled = !hasFiles;
+    clearBtn.innerHTML = '<i class="fas fa-trash-alt"></i> Clear All';
+
+    //Update Download button
+    downloadFeedBtn.disabled = !hasFiles;
+    downloadFeedBtn.innerHTML = '<i class="fas fa-download"></i> Download Feed'
 }
 
 function displayResults() {
@@ -823,7 +846,7 @@ function getColorName(hex) {
   if (h >= 315 && h < 360) return 'red';
   
   return 'colorful';
-}
+}   
 
 function displayCaptions(captions) {
     captionsOutput.innerHTML = '<h4>Instagram Feed</h4>';
