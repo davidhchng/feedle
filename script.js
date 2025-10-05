@@ -824,73 +824,65 @@ function getColorName(hex) {
 }
 
 function displayCaptions(captions) {
- captionsOutput.innerHTML = '<h4>Instagram Feed</h4>';
- 
- const feedContainer = document.createElement('div');
- feedContainer.className = 'instagram-feed';
- 
- captions.forEach((item, index) => {
- const flipCard = document.createElement('div');
- flipCard.className = 'flip-card';
- flipCard.innerHTML = `
- <div class="flip-card-inner">
- <div class="flip-card-front">
- <img src="${item.imageSrc}" alt="${item.imageName}" class="feed-image" />
- <div class="image-overlay">
- <i class="fas fa-eye"></i>
- </div>
-                     <button class="pin-btn-front" onclick="handleImagePinning(this.closest('.flip-card'), ${index})">
-                         <i class="fas fa-thumbtack"></i>
-                     </button>
-                     <button class="remove-btn-front" onclick="removeImageFromFeed(this.closest('.flip-card'), ${index})">
-                         <i class="fas fa-times"></i>
-                     </button>
- </div>
- <div class="flip-card-back">
- <div class="caption-content">
- <h5>${item.imageName}</h5>
- <p class="caption-text">${item.caption}</p>
- <div class="color-chips">
- ${item.colors.map(color => `<span class="color-chip" style="background-color: ${color}"></span>`).join('')}
- </div>
- <div class="caption-actions">
- <button class="copy-btn" onclick="copyToClipboard('${item.caption.replace(/'/g, "\\'")}')">
- <i class="fas fa-copy"></i> Copy Caption
- </button>
- <button class="regenerate-btn" onclick="regenerateCaption(this.closest('.flip-card'), ${index})">
- <i class="fas fa-sync-alt"></i> Regenerate
- </button>
- </div>
- <div class="caption-suggestions">
- <input type="text" class="suggestion-input" placeholder="enter keyword..." />
- <button class="suggest-btn" onclick="suggestCaptionChanges(this)">
- <i class="fas fa-lightbulb"></i> Suggest
- </button>
- </div>
- </div>
- </div>
- </div>
- `;
- 
- // Add click event listener for flip
- flipCard.addEventListener('click', function(event) {
- // Don't flip if clicking on buttons or inputs
- if (event.target.closest('button') || event.target.closest('input')) {
- return;
- }
- flipCard.classList.toggle('flipped');
- });
- 
- // Add double-click event listener for swap
- flipCard.addEventListener('dblclick', function() {
- handleImageSelection(flipCard, index);
- });
- 
- feedContainer.appendChild(flipCard);
- });
- 
- captionsOutput.appendChild(feedContainer);
-}
+    captionsOutput.innerHTML = '<h4>Instagram Feed</h4>';
+  
+    const feedContainer = document.createElement('div');
+    feedContainer.className = 'instagram-feed';
+  
+    captions.forEach((item, index) => {
+      const flipCard = document.createElement('div');
+      flipCard.className = 'flip-card';
+      flipCard.innerHTML = `
+        <div class="flip-card-inner">
+          <div class="flip-card-front">
+            <img src="${item.imageSrc}" alt="${item.imageName}" class="feed-image" />
+            <div class="image-overlay">
+              <i class="fas fa-eye"></i>
+            </div>
+            <button class="pin-btn-front" onclick="handleImagePinning(this.closest('.flip-card'), ${index})">
+              <i class="fas fa-thumbtack"></i>
+            </button>
+            <button class="remove-btn-front" onclick="removeImageFromFeed(this.closest('.flip-card'), ${index})">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div class="flip-card-back">
+            <div class="caption-content">
+              <h5>${item.imageName}</h5>
+              <p class="caption-text">${item.caption}</p>
+              <div class="color-chips">
+                ${item.colors.map(color => `<span class="color-chip" style="background-color: ${color}"></span>`).join('')}
+              </div>
+              <div class="caption-actions">
+                <button class="copy-btn" onclick="copyToClipboard('${item.caption.replace(/'/g, "\\'")}')">
+                  <i class="fas fa-copy"></i> Copy Caption
+                </button>
+                <button class="regenerate-btn" onclick="regenerateCaption(this.closest('.flip-card'), ${index})">
+                  <i class="fas fa-sync-alt"></i> Regenerate
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+  
+      // Flip behaviour
+      flipCard.addEventListener('click', function(event) {
+        if (event.target.closest('button') || event.target.closest('input')) return;
+        flipCard.classList.toggle('flipped');
+      });
+  
+      // Double-click swap
+      flipCard.addEventListener('dblclick', function() {
+        handleImageSelection(flipCard, index);
+      });
+  
+      feedContainer.appendChild(flipCard);
+    });
+  
+    captionsOutput.appendChild(feedContainer);
+  }
+  
 
 function copyToClipboard(text) {
  navigator.clipboard.writeText(text).then(() => {
