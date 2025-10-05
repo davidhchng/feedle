@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketing through Colors</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.2/color-thief.umd.js"></script>
+    <div class="container">
+        <!-- HEADER -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="title">FEEDLE</h1>
+                <button id="themeToggle" class="theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+            <p class="subtitle">Upload your content and let colors tell your story</p>
+        </header>
+
+        <!-- MAIN -->
+        <main class="main-content">
+            <div class="upload-section">
+                <!-- Folder Upload -->
+                <div class="upload-card folder-upload">
+                    <div class="upload-icon"><i class="fas fa-folder-open"></i></div>
+                    <h3>Upload Folder</h3>
+                    <p>Select a folder containing your marketing materials</p>
+                    <input type="file" id="folderInput" webkitdirectory multiple style="display: none;">
+                    <button class="upload-btn" onclick="document.getElementById('folderInput').click()">
+                        <i class="fas fa-upload"></i> Choose Folder
+                    </button>
+                    <div id="folderPreview" class="file-preview"></div>
+                </div>
+
+                <!-- Photo Upload -->
+                <div class="upload-card photo-upload">
+                    <div class="upload-icon"><i class="fas fa-image"></i></div>
+                    <h3>Reference Photo</h3>
+                    <p>Select a reference image for color matching</p>
+                    <input type="file" id="photoInput" accept="image/*" style="display: none;">
+                    <button class="upload-btn" onclick="document.getElementById('photoInput').click()">
+                        <i class="fas fa-upload"></i> Choose Reference
+                    </button>
+                    <div id="photoPreview" class="file-preview"></div>
+                </div>
+            </div>
+
+            <!-- Chatbot Section -->
+            <div class="chatbot-section">
+                <div class="chatbot-container">
+                    <div class="search-bar">
+                        <input type="text" id="themeInput" placeholder="I want my instagram caption to have themes of..." />
+                        <button id="generateCaptions" class="generate-btn">
+                            <i class="fas fa-magic"></i> Generate Instagram Feed
+                        </button>
+                    </div>
+                    <div class="feed-controls" id="feedControls" style="display: none;">
+                        <div class="pin-info">
+                            <i class="fas fa-thumbtack"></i>
+                            <span>Flip images to see pin button (max 3)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="action-section">
+                <button id="clearBtn" class="clear-btn">
+                    <i class="fas fa-trash"></i> Clear All
+                </button>
+            </div>
+
+            <!-- Captions -->
+            <div class="captions-output" id="captionsOutput"></div>
+
+            <!-- ✅ Missing Section Added -->
+            <section id="resultsSection" style="display:none;">
+                <h2>Results</h2>
+                <div id="fileList"></div>
+                <div id="colorPalette"></div>
+            </section>
+        </main>
+
+        <!-- Sidebar Zoom Controls -->
+        <div class="zoom-sidebar" id="zoomSidebar" style="display: none;">
+            <div class="zoom-controls">
+                <button id="zoomOut" class="zoom-btn"><i class="fas fa-search-minus"></i></button>
+                <span id="zoomLevel">100%</span>
+                <button id="zoomIn" class="zoom-btn"><i class="fas fa-search-plus"></i></button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p style="display: none;">&copy; 2024 Marketing through Colors. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

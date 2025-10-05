@@ -1,0 +1,100 @@
+function colorDistance(c1, c2) {
+    const rDiff = c1[0] - c2[0];
+    const gDiff = c1[1] - c2[1];
+    const bDiff = c1[2] - c2[2];
+    return Math.sqrt(rDiff * rDiff + gDiff * gDiff + bDiff * bDiff);
+}
+
+// hex → [r,g,b]
+function hexToRgb(hex) {
+    const bigint = parseInt(hex.slice(1), 16);
+    return [
+        (bigint >> 16) & 255,
+        (bigint >> 8) & 255,
+        bigint & 255
+    ];
+}
+
+function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+
+    if (max === min) {
+        h = s = 0; // grey
+    } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+    }
+    return [h * 360, s * 100, l * 100]; // H in [0-360], S/L in [0-100]
+}
+
+function poppiness(hex) {
+    const [r, g, b] = hexToRgb(hex);
+    const [h, s, l] = rgbToHsl(r, g, b);
+
+    let score = s; // saturation is the base
+    if (l < 15 || l > 85) score *= 0.3; // penalize too dark/too light
+
+    return score; // higher = more poppy
+}
+
+function paletteSimilarity(colorsA, colorsB) {
+    let total = 0;
+    let count = 0;
+
+    colorsA.forEach(hexA => {
+        const rgbA = hexToRgb(hexA);
+
+        let best = Infinity;
+        colorsB.forEach(hexB => {
+            const rgbB = hexToRgb(hexB);
+            const dist = colorDistance(rgbA, rgbB);
+            if (dist < best) best = dist;
+        });
+
+        total += best;
+        count++;
+    });
+
+    return total / count; // average distance
+}
+
+
+function sortDisplayImages(theMainImage) {
+    if (!theMainImage) {
+        showNotification("No main image selected", "error");
+        return [];
+    }
+
+    const results = [];
+    const threshold = 40; // loosen for debugging
+
+    for (const [id, data] of Object.entries(imageStore)) {
+        const score = paletteSimilarity(
+            theMainImage.colors.slice(0, 3),
+            data.colors.slice(0, 3)
+        );
+        console.log(`Image ${id} score:`, score); // DEBUG
+        if (score < threshold) {
+            results.push([id, { ...data, score }]);
+        }
+    }
+
+    results.sort((a, b) => a[1].score - b[1].score);
+
+    if (results.length === 0) {
+        resultsSection.style.display = 'block';
+        resultsSection.innerHTML = "<p>No matches found</p>";
+        return [];
+    }
+
+    displayStoredImages(results);
+    return results;
+}
