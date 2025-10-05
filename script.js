@@ -779,59 +779,70 @@ function generateCreativeCaption(imageName, colors, theme, imageNumber) {
   return randomStyle();
 }
 
-function interpretTheme(theme) {
- const themeLower = theme.toLowerCase();
- 
- // Extract key words from the suggestion
- const words = themeLower.split(/\s+/);
- 
- // Check for mood indicators and return thematic interpretation
- let mood = 'aesthetic';
- let hashtags = '#aesthetic #vibes #mood';
- 
- // Romantic themes - interpret as romantic mood
- if (words.some(word => ['romantic', 'love', 'romance', 'sweet', 'tender', 'passionate', 'intimate', 'affectionate', 'caring'].includes(word))) {
- mood = 'romantic';
- hashtags = '#romantic #love #aesthetic';
- }
- // Adventure themes - interpret as adventurous mood
- else if (words.some(word => ['adventure', 'explore', 'travel', 'wander', 'journey', 'wild', 'outdoor', 'bold', 'daring', 'exciting'].includes(word))) {
- mood = 'adventurous';
- hashtags = '#adventure #explore #wanderlust';
- }
- // Casual themes - interpret as chill mood
- else if (words.some(word => ['casual', 'chill', 'relaxed', 'easy', 'simple', 'comfortable', 'laid', 'back', 'mellow'].includes(word))) {
- mood = 'chill';
- hashtags = '#casual #chill #vibes';
- }
- // Mysterious themes - interpret as mysterious mood
- else if (words.some(word => ['mysterious', 'mystery', 'dark', 'moody', 'mystical', 'enigmatic', 'secretive', 'hidden', 'shadowy'].includes(word))) {
- mood = 'mysterious';
- hashtags = '#mysterious #moody #darkaesthetic';
- }
- // Fun themes - interpret as playful mood
- else if (words.some(word => ['fun', 'playful', 'happy', 'joyful', 'cheerful', 'bright', 'lively', 'energetic', 'upbeat'].includes(word))) {
- mood = 'playful';
- hashtags = '#fun #playful #happy';
- }
- // Poetic themes - interpret as artistic mood
- else if (words.some(word => ['poetic', 'poetry', 'artistic', 'creative', 'elegant', 'sophisticated', 'beautiful', 'graceful'].includes(word))) {
- mood = 'artistic';
- hashtags = '#poetic #artistic #creative';
- }
- // Exciting themes - interpret as energetic mood
- else if (words.some(word => ['exciting', 'energy', 'vibrant', 'dynamic', 'intense', 'powerful', 'electric', 'thrilling'].includes(word))) {
- mood = 'energetic';
- hashtags = '#exciting #energy #vibrant';
- }
- // If no specific mood found, use a generic aesthetic theme
- else {
- mood = 'aesthetic';
- hashtags = '#aesthetic #vibes #mood';
- }
- 
- return { mood, hashtags };
-}
+function interpretTheme(theme, dominantHex = null) {
+    const themeLower = theme.toLowerCase();
+    const words = themeLower.split(/\s+/);
+  
+    // --- STEP 1: Theme keyword check ---
+    if (words.some(word => ['romantic','love','romance','sweet','tender','passionate','intimate','affectionate','caring'].includes(word))) {
+      return { mood: 'romantic', hashtags: '#romantic #love #aesthetic' };
+    }
+    if (words.some(word => ['adventure','explore','travel','wander','journey','wild','outdoor','bold','daring','exciting'].includes(word))) {
+      return { mood: 'adventurous', hashtags: '#adventure #explore #wanderlust' };
+    }
+    if (words.some(word => ['casual','chill','relaxed','easy','simple','comfortable','laid','back','mellow'].includes(word))) {
+      return { mood: 'chill', hashtags: '#casual #chill #vibes' };
+    }
+    if (words.some(word => ['mysterious','mystery','dark','moody','mystical','enigmatic','secretive','hidden','shadowy'].includes(word))) {
+      return { mood: 'mysterious', hashtags: '#mysterious #moody #darkaesthetic' };
+    }
+    if (words.some(word => ['fun','playful','happy','joyful','cheerful','bright','lively','energetic','upbeat'].includes(word))) {
+      return { mood: 'playful', hashtags: '#fun #playful #happy' };
+    }
+    if (words.some(word => ['poetic','poetry','artistic','creative','elegant','sophisticated','beautiful','graceful'].includes(word))) {
+      return { mood: 'artistic', hashtags: '#poetic #artistic #creative' };
+    }
+    if (words.some(word => ['exciting','energy','vibrant','dynamic','intense','powerful','electric','thrilling'].includes(word))) {
+      return { mood: 'energetic', hashtags: '#exciting #energy #vibrant' };
+    }
+  
+    // --- STEP 2: Color-based fallback ---
+    if (dominantHex) {
+      const [r, g, b] = hexToRgb(dominantHex);
+  
+      // Greenish tones → matcha / nature / picnic
+      if (g > 160 && r < 200 && b < 160) {
+        return { mood: "nature", hashtags: "#matcha #nature #picnic #fresh" };
+      }
+      // Yellowish → summer / vibes
+      if (r > 200 && g > 200 && b < 120) {
+        return { mood: "summer", hashtags: "#summer #vibes #sunny" };
+      }
+      // Pink / purple → flower
+      if (r > 200 && b > 150 && g < 180) {
+        return { mood: "floral", hashtags: "#flower #bloom #springvibes" };
+      }
+      // Blue tones → calm / fresh
+      if (b > 180 && r < 160 && g < 200) {
+        return { mood: "calm", hashtags: "#fresh #calm #serene" };
+      }
+      // Orange / warm tones → cozy / picnic
+      if (r > 200 && g > 120 && b < 100) {
+        return { mood: "cozy", hashtags: "#picnic #cozy #warmvibes" };
+      }
+    }
+  
+    // --- STEP 3: Random fallback moods ---
+    const defaultMoods = [
+      { mood: "aesthetic", hashtags: "#aesthetic #vibes #mood" },
+      { mood: "dreamy", hashtags: "#dreamy #vibes #magic" },
+      { mood: "vintage", hashtags: "#vintage #retro #classic" },
+      { mood: "modern", hashtags: "#modern #minimal #clean" },
+      { mood: "bold", hashtags: "#bold #bright #statement" }
+    ];
+  
+    return defaultMoods[Math.floor(Math.random() * defaultMoods.length)];
+  }
 
 function getColorName(hex) {
   const rgb = hexToRgb(hex);
@@ -882,7 +893,6 @@ function displayCaptions(captions) {
           </div>
           <div class="flip-card-back">
             <div class="caption-content">
-              <h5>${item.imageName}</h5>
               <p class="caption-text">${item.caption}</p>
               <div class="color-chips">
                 ${item.colors.map(color => `<span class="color-chip" style="background-color: ${color}"></span>`).join('')}
